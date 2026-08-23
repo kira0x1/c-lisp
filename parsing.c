@@ -36,12 +36,12 @@ int main(int argc, char **argv) {
     mpc_parser_t *Pengu = mpc_new("pengu");
 
     mpca_lang(MPCA_LANG_DEFAULT,
-              "                                                         \
+              "                                                        \
             number      :   /-?[0-9]+/ ;                                        \
             operator    :   '+' | '-' | '*' | '/' | /add/ | /mul/ | /sub/ | /div/ ;   \
             expr        :   <number> | '(' <operator> <expr>+ ')' ;             \
             ab          :    /[a-b]+/;                                          \
-            pengu       :   /^/ <operator> <expr>+ | <ab> /$/ ;         \
+            pengu       :   /^/ <operator> <expr>+ | <ab> /$/ ;                 \
             ",
               Number, Operator, Expr, Ab, Pengu);
 
@@ -54,6 +54,11 @@ int main(int argc, char **argv) {
 
         mpc_result_t r;
         if (mpc_parse("<stdin>", input, Pengu, &r)) {
+            mpc_ast_t *a = r.output;
+            printf("\ntag: %s\n", a->tag);
+            printf("contents: %s\n", a->contents);
+            printf("children: %i\n\n", a->children_num);
+
             mpc_ast_print(r.output);
             mpc_ast_delete(r.output);
         } else {

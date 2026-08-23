@@ -9,16 +9,17 @@ static char buffer[2048];
 
 /* Fake readline function */
 char *readline(char *prompt) {
-  fputs(prompt, stdout);
-  fgets(buffer, 2048, stdin);
-  char *cpy = malloc(strlen(buffer) + 1);
-  strcpy_s(cpy, 2048, buffer);
-  cpy[strlen(cpy) - 1] = '\0';
-  return cpy;
+    fputs(prompt, stdout);
+    fgets(buffer, 2048, stdin);
+    char *cpy = malloc(strlen(buffer) + 1);
+    strcpy_s(cpy, 2048, buffer);
+    cpy[strlen(cpy) - 1] = '\0';
+    return cpy;
 }
 
 /* Fake add_history function */
-void add_history(char *unused) {}
+void add_history(char *unused) {
+}
 
 /* Otherwise include the editline headers */
 #else
@@ -30,23 +31,23 @@ void add_history(char *unused) {}
 // static char input[2048];
 
 int main(int argc, char **argv) {
-  puts("pengu version 0.0.0.0.1");
-  puts("press ctrl+c to exit\n");
+    puts("pengu version 0.0.0.0.1");
+    puts("press ctrl+c to exit\n");
 
-  while (1) {
-    char *input = readline("pengu> ");
+    while (1) {
+        char *input = readline("pengu> ");
 
-    add_history(input);
+        add_history(input);
 
-    // fgets(input, 2048, stdin);
+        // fgets(input, 2048, stdin);
 
-    int len = strlen(input);
-    if (len > 0) {
-      printf("No you're a %s\n", input);
+        int len = strlen(input);
+        if (len > 0) {
+            printf("No you're a %s\n", input);
+        }
+
+        free(input);
     }
 
-    free(input);
-  }
-
-  return 0;
+    return 0;
 }
