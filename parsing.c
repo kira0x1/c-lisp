@@ -39,24 +39,52 @@ int number_of_nodes(mpc_ast_t *t) {
     return 0;
 }
 
+long eval_op(char *op, long x, long y) {
+    if (strcmp(op, "+") == 0) { return x + y; }
+    if (strcmp(op, "-") == 0) { return x - y; }
+    if (strcmp(op, "*") == 0) { return x * y; }
+    if (strcmp(op, "/") == 0) { return x / y; }
+
+    return 0;
+}
+
+long eval(mpc_ast_t *t) {
+    if (strstr(t->tag, "number")) {
+        return atoi(t->contents);
+    }
+
+    // second child is always the operator
+    char *op = t->children[1]->contents;
+
+    // store third child as x
+    long x = eval(t->children[2]);
+
+    // evaluate the rest of the nodes
+    int i = 3;
+    while (strstr(t->children[i]->tag, "expr")) {
+        x = eval_op(op, x, eval(t->children[i]));
+        i++;
+    }
+
+    return x;
+}
+
 
 int main(int argc, char **argv) {
     // Parsers
     mpc_parser_t *Number = mpc_new("number");
     mpc_parser_t *Operator = mpc_new("operator");
     mpc_parser_t *Expr = mpc_new("expr");
-    mpc_parser_t *Ab = mpc_new("ab");
     mpc_parser_t *Pengu = mpc_new("pengu");
 
     mpca_lang(MPCA_LANG_DEFAULT,
-              "                                                        \
-            number      :   /-?[0-9]+/ ;                                        \
-            operator    :   '+' | '-' | '*' | '/' | /add/ | /mul/ | /sub/ | /div/ ;   \
-            expr        :   <number> | '(' <operator> <expr>+ ')' ;             \
-            ab          :    /[a-b]+/;                                          \
-            pengu       :   /^/ <operator> <expr>+ | <ab> /$/ ;                 \
-            ",
-              Number, Operator, Expr, Ab, Pengu);
+              R"(
+            number      :   /-?[0-9]+/ ;
+            operator    :   '+' | '-' | '*' | '/' | /add/ | /mul/ | /sub/ | /div/ ;
+            expr        :   <number> | '(' <operator> <expr>+ ')' ;
+            pengu       :   /^/ <operator> <expr>+ /$/ ;
+            )",
+              Number, Operator, Expr, Pengu);
 
     puts("pengu version 0.0.0.0.2");
     puts("press ctrl+c to exit\n");
@@ -67,20 +95,11 @@ int main(int argc, char **argv) {
 
         mpc_result_t r;
         if (mpc_parse("<stdin>", input, Pengu, &r)) {
-            mpc_ast_t *a = r.output;
-            printf("\ntag: %s\n", a->tag);
-            printf("contents: %s\n", a->contents);
-            printf("children: %i\n\n", a->children_num);
+            long result = eval(r.output);
 
+            printf("\n -- result --\n");
+            printf("%li\n", result);
 
-            mpc_ast_t *c0 = a->children[0];
-            printf("child-0 [TAG]: %s\n", c0->tag);
-            printf("child-0 [CONTENTS]: %s\n", c0->contents);
-            printf("child-0 [NUM-CHILDREN]: %i\n\n", c0->children_num);
-
-            printf("---------------- number of nodes ------------\n%i\n---------------------\n", number_of_nodes(a));
-
-            mpc_ast_print(r.output);
             mpc_ast_delete(r.output);
         } else {
             mpc_err_print(r.error);
@@ -90,7 +109,7 @@ int main(int argc, char **argv) {
         free(input);
     }
 
-    mpc_cleanup(5, Number, Operator, Expr, Ab, Pengu);
+    mpc_cleanup(4, Number, Operator, Expr, Pengu);
 
     return 0;
 }
